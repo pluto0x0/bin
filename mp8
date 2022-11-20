@@ -3,7 +3,7 @@
 pasue(){
     echo $*
     read -s -n1 -p "press any key to continue.."
-    echo
+    exit
 }
 
 check(){
