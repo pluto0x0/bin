@@ -1,0 +1,99 @@
+#!/usr/bin/bash
+# xmin=-1720878
+# xmax=2317064
+# ymin=-160490
+# ymax=2697495
+
+xmin=1020000
+xmax=1090000
+ymin=476000
+ymax=532000
+
+cnt=0
+
+rnd(){      # min max
+    rnd_value=$(($RANDOM * ($2 - $1) / 32767 + $1))
+}
+
+gen(){
+    rnd $xmin $xmax
+    x1f=$rnd_value
+    rnd $ymin $ymax
+    y1f=$rnd_value
+    rnd -3000 3000
+    x2f=$(($x1f + $rnd_value))
+    rnd -3000 3000
+    y2f=$(($y1f + $rnd_value))
+    rnd 6000 10000
+    r1f=$rnd_value
+    rnd 6000 10000
+    r2f=$rnd_value
+    
+    rnd $xmin $xmax
+    x1t=$rnd_value
+    rnd $ymin $ymax
+    y1t=$rnd_value
+    rnd -3000 3000
+    x2t=$(($x1t + $rnd_value))
+    rnd -3000 3000
+    y2t=$(($y1t + $rnd_value))
+    rnd 5000 10000
+    r1t=$rnd_value
+    rnd 5000 10000
+    r2t=$rnd_value
+
+    echo $x1f $y1f $r1f $x1t $y1t $r1t > test_requests
+    echo $x2f $y2f $r2f $x2t $y2t $r2t >> test_requests
+}
+
+quit(){
+    echo $1
+    echo Exiting...
+    exit
+}
+
+if_ret(){
+    if [ $? != 0 ]
+    then
+        quit "$1"
+    fi
+}
+
+prep(){
+    clear
+    make > /dev/null
+    if_ret "Compile Error!"
+}
+
+make_image(){
+    make image
+}
+
+test(){
+    rm result.c gold.c 2> /dev/null
+    ./gold graph test_requests > /dev/null
+    # make_image  > /dev/null
+    # if_ret "'Make image' Error!"
+
+    mv result.c gold.c 2> /dev/null
+    if [ $? != 0 ]
+    then
+        return
+    fi
+
+    ./mp9 graph test_requests > /dev/null
+    if_ret "Runtime Error!"
+    # make_image  > /dev/null
+    # if_ret "'Make image' Error!"
+    cmp result.c gold.c > /dev/null
+    if_ret "Wrong Answer!"
+    echo "#$cnt Passed"
+    cnt=$(($cnt + 1))
+}
+
+prep
+while :
+do
+    gen
+    test
+done
